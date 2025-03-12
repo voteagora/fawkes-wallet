@@ -160,21 +160,26 @@ app.post('/wallet/approve-session', async (req, res) => {
         console.log('DEBUG: Optional namespaces:', JSON.stringify(optionalNamespaces, null, 2));
         console.log('DEBUG: Required namespaces:', JSON.stringify(requiredNamespaces, null, 2));
         console.log('DEBUG: Relays:', JSON.stringify(relays, null, 2));
-        
-        /* const namespaces = {};
-        Object.keys(requiredNamespaces).forEach(key => {
-            const chains = requiredNamespaces[key].chains || [];
-            namespaces[key] = {
-                accounts: chains.map(chain => `${chain}:${wallet.address}`),
-                methods: requiredNamespaces[key].methods,
-                events: requiredNamespaces[key].events
+
+        // Build supported namespaces based on required namespaces
+        const supportedNamespaces = {};
+        Object.entries(optionalNamespaces).forEach(([chain, namespace]) => {
+            supportedNamespaces[chain] = {
+                chains: namespace.chains,
+                methods: namespace.methods,
+                events: namespace.events,
+                accounts: namespace.chains.map(chain => `${chain}:${wallet.address}`)
             };
-        }); */
+        });
+
+        console.log('DEBUG: Supported namespaces:', JSON.stringify(supportedNamespaces, null, 2));
 
         const approvedNamespaces = buildApprovedNamespaces({
             proposal: params,
-            supportedNamespaces: optionalNamespaces
+            supportedNamespaces
         });
+
+        console.log('DEBUG: Approved namespaces:', JSON.stringify(approvedNamespaces, null, 2));
 
         const session = await walletKit.approveSession({
             id,
