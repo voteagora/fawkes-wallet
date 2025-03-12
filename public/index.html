@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST Wallet Status</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .history-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .address {
+            font-family: monospace;
+            background: #eee;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>REST Wallet Status</h1>
+        
+        <div class="status-section">
+            <h2>Wallet Info</h2>
+            <div id="wallet-status">Loading...</div>
+        </div>
+
+        <div class="status-section">
+            <h2>Pending Requests</h2>
+            <div id="pending-requests">No pending requests</div>
+        </div>
+
+        <div class="status-section">
+            <h2>History</h2>
+            <div id="history">No history</div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/wallet/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update wallet status
+                    const walletStatus = document.getElementById('wallet-status');
+                    walletStatus.innerHTML = `
+                        <p><strong>Initialized:</strong> ${data.initialized}</p>
+                        ${data.address ? `<p><strong>Address:</strong> <span class="address">${data.address}</span></p>` : ''}
+                        <p><strong>Connected:</strong> ${data.connected}</p>
+                    `;
+
+                    // Update pending requests
+                    const pendingRequests = document.getElementById('pending-requests');
+                    if (data.pendingRequests && data.pendingRequests.length > 0) {
+                        pendingRequests.innerHTML = data.pendingRequests.map(([id, request]) => `
+                            <div class="history-item">
+                                <strong>Request ID:</strong> ${id}<br>
+                                <pre>${JSON.stringify(request, null, 2)}</pre>
+                            </div>
+                        `).join('');
+                    } else {
+                        pendingRequests.innerHTML = 'No pending requests';
+                    }
+
+                    // Update history
+                    const history = document.getElementById('history');
+                    if (data.history && data.history.length > 0) {
+                        history.innerHTML = data.history.map(item => `
+                            <div class="history-item">
+                                <strong>${item.type}</strong> - ${new Date(item.timestamp).toLocaleString()}<br>
+                                <pre>${JSON.stringify(item.data, null, 2)}</pre>
+                            </div>
+                        `).join('');
+                    } else {
+                        history.innerHTML = 'No history';
+                    }
+                })
+                .catch(error => console.error('Error fetching status:', error));
+        }
+
+        // Update status every 2 seconds
+        setInterval(updateStatus, 2000);
+        updateStatus(); // Initial update
+    </script>
+</body>
+</html>
