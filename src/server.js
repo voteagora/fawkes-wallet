@@ -43,8 +43,11 @@ async function initializeWalletConnect() {
             }
         });
 
+        console.log('WalletKit instance created:', walletKit);
+
         walletKit.on('session_proposal', async (event) => {
-            console.log('Received session proposal:', event);
+            console.log('DEBUG: session_proposal event triggered');
+            console.log('Event details:', JSON.stringify(event, null, 2));
             walletHistory.push({
                 type: 'session_proposal',
                 timestamp: new Date(),
@@ -54,7 +57,8 @@ async function initializeWalletConnect() {
         });
 
         walletKit.on('session_request', async (event) => {
-            console.log('Received session request:', event);
+            console.log('DEBUG: session_request event triggered');
+            console.log('Event details:', JSON.stringify(event, null, 2));
             walletHistory.push({
                 type: 'session_request',
                 timestamp: new Date(),
@@ -63,12 +67,28 @@ async function initializeWalletConnect() {
             pendingRequests.set(event.id, event);
         });
 
+        walletKit.on('error', (error) => {
+            console.error('WalletKit error:', error);
+        });
+
+        walletKit.on('session_delete', (event) => {
+            console.log('DEBUG: session_delete event:', event);
+        });
+
+        console.log('WalletKit event handlers registered');
+
         console.log('WalletConnect initialized successfully');
     } catch (error) {
         console.error('Failed to initialize WalletConnect:', error);
         throw error;
     }
 }
+
+// Initialize WalletConnect immediately on server start
+initializeWalletConnect().catch(error => {
+    console.error('Failed to initialize WalletKit on startup:', error);
+    process.exit(1);
+});
 
 // API Routes
 app.post('/wallet/create', async (req, res) => {
@@ -91,9 +111,6 @@ app.post('/wallet/create', async (req, res) => {
 
 app.post('/wallet/connect', async (req, res) => {
     try {
-        if (!walletKit) {
-            await initializeWalletConnect();
-        }
         if (!wallet) {
             return res.status(400).json({ error: 'Wallet not initialized' });
         }
@@ -102,11 +119,26 @@ app.post('/wallet/connect', async (req, res) => {
             return res.status(400).json({ error: 'WalletConnect URI is required' });
         }
 
+        console.log('Attempting to pair with URI:', uri);
         const connection = await walletKit.pair({ uri });
-        console.log('Paired with dApp:', connection.app.metadata.name);
-        res.json({ success: true });
+        console.log('Pairing response:', connection);
+        
+        walletHistory.push({
+            type: 'pairing_attempt',
+            timestamp: new Date(),
+            success: true,
+            data: connection
+        });
+        
+        res.json({ success: true, connection });
     } catch (error) {
         console.error('Connection error:', error);
+        walletHistory.push({
+            type: 'pairing_attempt',
+            timestamp: new Date(),
+            success: false,
+            error: error.message
+        });
         res.status(500).json({ error: error.message });
     }
 });
@@ -114,6 +146,7 @@ app.post('/wallet/connect', async (req, res) => {
 app.post('/wallet/approve-session', async (req, res) => {
     try {
         const proposal = pendingRequests.get('session_proposal');
+        console.log(proposal)
         if (!proposal) {
             return res.status(404).json({ error: 'No pending session proposal' });
         }
