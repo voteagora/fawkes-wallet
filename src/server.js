@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import * as bip39 from 'bip39';
 import { Core } from '@walletconnect/core';
 import { WalletKit } from '@reown/walletkit';
-import { getSdkError } from '@walletconnect/utils';
+import { getSdkError, buildApprovedNamespaces } from '@walletconnect/utils';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
@@ -145,16 +145,23 @@ app.post('/wallet/connect', async (req, res) => {
 
 app.post('/wallet/approve-session', async (req, res) => {
     try {
+        console.log('DEBUG: approve-session event triggered');
         const proposal = pendingRequests.get('session_proposal');
         console.log(proposal)
         if (!proposal) {
             return res.status(404).json({ error: 'No pending session proposal' });
         }
 
+        console.log('DEBUG: Validating session proposal');
         const { id, params } = proposal;
-        const { requiredNamespaces, relays } = params;
+        const { requiredNamespaces, optionalNamespaces, relays } = params;
+        console.log('DEBUG: Session proposal details:', JSON.stringify(params, null, 2));
 
-        const namespaces = {};
+        console.log('DEBUG: Optional namespaces:', JSON.stringify(optionalNamespaces, null, 2));
+        console.log('DEBUG: Required namespaces:', JSON.stringify(requiredNamespaces, null, 2));
+        console.log('DEBUG: Relays:', JSON.stringify(relays, null, 2));
+        
+        /* const namespaces = {};
         Object.keys(requiredNamespaces).forEach(key => {
             const chains = requiredNamespaces[key].chains || [];
             namespaces[key] = {
@@ -162,12 +169,17 @@ app.post('/wallet/approve-session', async (req, res) => {
                 methods: requiredNamespaces[key].methods,
                 events: requiredNamespaces[key].events
             };
+        }); */
+
+        const approvedNamespaces = buildApprovedNamespaces({
+            proposal: params,
+            supportedNamespaces: optionalNamespaces
         });
 
         const session = await walletKit.approveSession({
             id,
             relayProtocol: relays[0].protocol,
-            namespaces
+            namespaces: approvedNamespaces
         });
 
         activeSession = session;
