@@ -31,6 +31,7 @@ let walletAddress = null;
 let activeSession = null;
 let pendingRequests = new Map();
 let walletHistory = [];
+let provider = null;
 
 // Initialize WalletConnect
 async function initializeWalletConnect() {
@@ -108,8 +109,12 @@ app.post('/wallet/create', async (req, res) => {
     if (impersonatedAddress) {
         
         console.log("A");
-        const provider = new ethers.JsonRpcProvider("http://localhost:8005");
-        impersonatedSigner = provider.getSigner(impersonatedAddress);
+        provider = new ethers.JsonRpcProvider("http://localhost:8005");
+
+        await provider.send("anvil_impersonateAccount", [impersonatedAddress]);
+
+        // impersonatedSigner = new ethers.Wallet(impersonatedAddress, provider);
+
 
         walletAddress = impersonatedAddress;
 
@@ -151,7 +156,7 @@ app.post('/wallet/create', async (req, res) => {
 
 app.post('/wallet/connect', async (req, res) => {
     try {
-        if (!wallet && !impersonatedSigner) {
+        if (!wallet && !impersonatedAddress) {
             return res.status(400).json({ error: 'Wallet not initialized' });
         }
         const { uri } = req.body;
@@ -269,7 +274,15 @@ app.post('/wallet/reject-session', async (req, res) => {
 
 app.post('/wallet/approve-request', async (req, res) => {
     try {
-        const { requestId } = req.body;
+        let { requestId } = req.body;
+        if (!requestId) {
+            const lastRequest = Array.from(pendingRequests).pop();
+            if (!lastRequest) {
+                return res.status(404).json({ error: 'No pending requests' });
+            }
+            requestId = lastRequest[1].id; 
+        }
+
         const request = pendingRequests.get(requestId);
         if (!request) {
             return res.status(404).json({ error: 'Request not found' });
@@ -278,6 +291,8 @@ app.post('/wallet/approve-request', async (req, res) => {
         let result;
         const { topic, params } = request;
         const { request: methodRequest } = params;
+
+        console.log(`DEBUG: ${methodRequest.method}`)
 
         if (methodRequest.method === 'personal_sign') {
             const message = methodRequest.params[0];
@@ -288,14 +303,18 @@ app.post('/wallet/approve-request', async (req, res) => {
                 result = await impersonatedSigner.signMessage(ethers.getBytes(message));
             }
 
-        } else if (methodRequest.method === 'eth_signTransaction') {
+        } else if (methodRequest.method === 'eth_sendTransaction') {
             const tx = methodRequest.params[0];
+            console.log(`DEBUG: ${tx}`)
             if (wallet) {
                 result = await wallet.signTransaction(tx);
             } else {
-                result = await impersonatedSigner.signTransaction(tx);
+                result = await provider.send("eth_sendTransaction", [tx]);
+                // result = await impersonatedSigner.sendTransaction(tx);
             }
         }
+
+        console.log(`DEBUG: ${result}`)
 
         await walletKit.respondSessionRequest({
             topic,
