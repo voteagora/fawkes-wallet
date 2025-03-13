@@ -22,6 +22,12 @@ if (!process.env.WALLET_CONNECT_PROJECT_ID) {
 // In-memory state
 let wallet = null;
 let walletKit = null;
+
+let impersonatedSigner = null;
+let impersonatedAddress = null;
+
+let walletAddress = null;
+
 let activeSession = null;
 let pendingRequests = new Map();
 let walletHistory = [];
@@ -92,26 +98,60 @@ initializeWalletConnect().catch(error => {
 
 // API Routes
 app.post('/wallet/create', async (req, res) => {
-    try {
-        const mnemonic = req.body.mnemonic || bip39.generateMnemonic();
-        wallet = ethers.Wallet.fromPhrase(mnemonic);
+
+    impersonatedAddress = req.body.address;
+
+    console.log(`impersonatedAddress: ${impersonatedAddress}`);
+
+    let resp = {};
+
+    if (impersonatedAddress) {
+        
+        console.log("A");
+        const provider = new ethers.JsonRpcProvider("http://localhost:8005");
+        impersonatedSigner = provider.getSigner(impersonatedAddress);
+
+        walletAddress = impersonatedAddress;
+
+        // walletKit.setSigner(impersonatedSigner);
+
         walletHistory.push({
             type: 'wallet_created',
             timestamp: new Date(),
-            address: wallet.address
+            address: walletAddress
         });
-        res.json({
-            address: wallet.address,
+
+        resp = { 
+            address: walletAddress,
+            impersonated: "true"
+        };
+
+        console.log(`RESP: ${resp}`);
+    } else {
+        const mnemonic = req.body.mnemonic || bip39.generateMnemonic();
+        wallet = ethers.Wallet.fromPhrase(mnemonic);    
+
+        walletAddress = wallet.address;
+
+        walletHistory.push({
+            type: 'wallet_created',
+            timestamp: new Date(),
+            address: walletAddress
+        });
+
+        resp = { 
+            address: walletAddress,
             mnemonic: mnemonic
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        };
     }
+
+
+    res.json(resp);
 });
 
 app.post('/wallet/connect', async (req, res) => {
     try {
-        if (!wallet) {
+        if (!wallet && !impersonatedSigner) {
             return res.status(400).json({ error: 'Wallet not initialized' });
         }
         const { uri } = req.body;
@@ -168,7 +208,7 @@ app.post('/wallet/approve-session', async (req, res) => {
                 chains: namespace.chains,
                 methods: namespace.methods,
                 events: namespace.events,
-                accounts: namespace.chains.map(chain => `${chain}:${wallet.address}`)
+                accounts: namespace.chains.map(chain => `${chain}:${walletAddress}`)
             };
         });
 
@@ -241,10 +281,20 @@ app.post('/wallet/approve-request', async (req, res) => {
 
         if (methodRequest.method === 'personal_sign') {
             const message = methodRequest.params[0];
-            result = await wallet.signMessage(ethers.getBytes(message));
+
+            if (wallet) {
+                result = await wallet.signMessage(ethers.getBytes(message));
+            } else {
+                result = await impersonatedSigner.signMessage(ethers.getBytes(message));
+            }
+
         } else if (methodRequest.method === 'eth_signTransaction') {
             const tx = methodRequest.params[0];
-            result = await wallet.signTransaction(tx);
+            if (wallet) {
+                result = await wallet.signTransaction(tx);
+            } else {
+                result = await impersonatedSigner.signTransaction(tx);
+            }
         }
 
         await walletKit.respondSessionRequest({
@@ -302,7 +352,7 @@ app.post('/wallet/reject-request', async (req, res) => {
 app.get('/wallet/status', (req, res) => {
     res.json({
         initialized: !!wallet,
-        address: wallet?.address,
+        address: !!walletAddress,
         connected: !!activeSession,
         pendingRequests: Array.from(pendingRequests.entries()),
         history: walletHistory
