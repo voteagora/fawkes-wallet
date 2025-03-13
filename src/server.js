@@ -247,7 +247,7 @@ app.post('/wallet/approve-request', async (req, res) => {
             result = await wallet.signTransaction(tx);
         }
 
-        await walletKit.respond({
+        await walletKit.respondSessionRequest({
             topic,
             response: {
                 id: request.id,
@@ -277,7 +277,7 @@ app.post('/wallet/reject-request', async (req, res) => {
             return res.status(404).json({ error: 'Request not found' });
         }
 
-        await walletKit.respond({
+        await walletKit.respondSessionRequest({
             topic: request.topic,
             response: {
                 id: request.id,
