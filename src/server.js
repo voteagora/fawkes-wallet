@@ -57,8 +57,11 @@ async function initializeWalletConnect() {
             console.log('Event details:', JSON.stringify(event, null, 2));
             walletHistory.push({
                 type: 'session_proposal',
+                emoji: '🙏',
                 timestamp: new Date(),
-                data: event
+                context: {
+                event
+                }
             });
             pendingRequests.set('session_proposal', event);
         });
@@ -69,7 +72,7 @@ async function initializeWalletConnect() {
             walletHistory.push({
                 type: 'session_request',
                 timestamp: new Date(),
-                data: event
+                context: { event } 
             });
             pendingRequests.set(event.id, event);
         });
@@ -80,6 +83,12 @@ async function initializeWalletConnect() {
 
         walletKit.on('session_delete', (event) => {
             console.log('DEBUG: session_delete event:', event);
+            walletHistory.push({
+                type: 'session_delete',
+                timestamp: new Date(),
+                context: { event } 
+            });
+            activeSession = null;
         });
 
         console.log('WalletKit event handlers registered');
@@ -109,7 +118,7 @@ app.post('/wallet/create', async (req, res) => {
     if (impersonatedAddress) {
         
         console.log("A");
-        provider = new ethers.JsonRpcProvider("http://localhost:8005");
+        provider = new ethers.JsonRpcProvider("http://localhost:8111");
 
         await provider.send("anvil_impersonateAccount", [impersonatedAddress]);
 
@@ -122,8 +131,12 @@ app.post('/wallet/create', async (req, res) => {
 
         walletHistory.push({
             type: 'wallet_created',
+            emoji: '⭐️',
             timestamp: new Date(),
-            address: walletAddress
+            context: { 
+                impersonated: true,
+                address: walletAddress
+            }
         });
 
         resp = { 
@@ -140,8 +153,12 @@ app.post('/wallet/create', async (req, res) => {
 
         walletHistory.push({
             type: 'wallet_created',
-            timestamp: new Date(),
-            address: walletAddress
+            emoji: '⭐️',
+            context: { 
+                timestamp: new Date(),
+                mnemonic,
+                address: walletAddress
+            }
         });
 
         resp = { 
@@ -170,9 +187,12 @@ app.post('/wallet/connect', async (req, res) => {
         
         walletHistory.push({
             type: 'pairing_attempt',
+            emoji: '👋',
             timestamp: new Date(),
-            success: true,
-            data: connection
+            context: {
+                success: true,
+                connection    
+            }
         });
         
         res.json({ success: true, connection });
@@ -181,8 +201,11 @@ app.post('/wallet/connect', async (req, res) => {
         walletHistory.push({
             type: 'pairing_attempt',
             timestamp: new Date(),
-            success: false,
-            error: error.message
+            emoji: '❌',
+            context: {
+                success: false,
+                error: error.message
+            }
         });
         res.status(500).json({ error: error.message });
     }
@@ -234,10 +257,14 @@ app.post('/wallet/approve-session', async (req, res) => {
 
         activeSession = session;
         pendingRequests.delete('session_proposal');
+
         walletHistory.push({
             type: 'session_approved',
+            emoji: '🟢',
             timestamp: new Date(),
-            data: session
+            context: {
+                session
+            }
         });
 
         res.json({ success: true, session });
@@ -262,8 +289,11 @@ app.post('/wallet/reject-session', async (req, res) => {
         pendingRequests.delete('session_proposal');
         walletHistory.push({
             type: 'session_rejected',
+            emoji: '🛑',
             timestamp: new Date(),
-            data: proposal
+            context : {
+                proposal
+            }
         });
 
         res.json({ success: true });
@@ -303,11 +333,15 @@ app.post('/wallet/approve-request', async (req, res) => {
                 result = await impersonatedSigner.signMessage(ethers.getBytes(message));
             }
 
-        } else if (methodRequest.method === 'eth_sendTransaction') {
+        } else if (methodRequest.method === 'eth_signTransaction') {
+            console.log(`DEBUG: ${methodRequest.params[0]}`)
+            throw new Error("eth_signTransaction not implemented!")
+
+        } else if (methodRequest.method == 'eth_sendTransaction') {
             const tx = methodRequest.params[0];
             console.log(`DEBUG: ${tx}`)
             if (wallet) {
-                result = await wallet.signTransaction(tx);
+                result = await wallet.sendTransaction(tx);
             } else {
                 result = await provider.send("eth_sendTransaction", [tx]);
                 // result = await impersonatedSigner.sendTransaction(tx);
@@ -328,8 +362,9 @@ app.post('/wallet/approve-request', async (req, res) => {
         pendingRequests.delete(requestId);
         walletHistory.push({
             type: 'request_approved',
+            emoji: '✅',
             timestamp: new Date(),
-            data: { request, result }
+            context: { request, result }
         });
 
         res.json({ success: true, result });
@@ -358,6 +393,7 @@ app.post('/wallet/reject-request', async (req, res) => {
         pendingRequests.delete(requestId);
         walletHistory.push({
             type: 'request_rejected',
+            emoji: '❌',
             timestamp: new Date(),
             data: request
         });
@@ -370,8 +406,8 @@ app.post('/wallet/reject-request', async (req, res) => {
 
 app.get('/wallet/status', (req, res) => {
     res.json({
-        initialized: !!wallet,
-        address: !!walletAddress,
+        initialized: !!walletAddress,
+        address: walletAddress,
         connected: !!activeSession,
         pendingRequests: Array.from(pendingRequests.entries()),
         history: walletHistory

@@ -95,8 +95,8 @@
                     if (data.history && data.history.length > 0) {
                         history.innerHTML = data.history.map(item => `
                             <div class="history-item">
-                                <strong>${item.type}</strong> - ${new Date(item.timestamp).toLocaleString()}<br>
-                                <pre>${JSON.stringify(item.data, null, 2)}</pre>
+                                <strong>${item.emoji} ${item.type}</strong> - ${new Date(item.timestamp).toLocaleString()}<br>
+                                <pre>${JSON.stringify(item.context, null, 2)}</pre>
                             </div>
                         `).join('');
                     } else {
