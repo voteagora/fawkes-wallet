@@ -19,6 +19,12 @@ if (!process.env.WALLET_CONNECT_PROJECT_ID) {
     process.exit(1);
 }
 
+// Verify environment variables
+if (!process.env.JSON_RPC_URL) {
+    console.error('Error: JSON_RPC_URL is required in .env file');
+    process.exit(1);
+}
+
 // In-memory state
 let wallet = null;
 let walletKit = null;
@@ -118,7 +124,7 @@ app.post('/wallet/create', async (req, res) => {
     if (impersonatedAddress) {
         
         console.log("A");
-        provider = new ethers.JsonRpcProvider("http://localhost:8111");
+        provider = new ethers.JsonRpcProvider(process.env.JSON_RPC_URL);
 
         await provider.send("anvil_impersonateAccount", [impersonatedAddress]);
 
@@ -416,5 +422,5 @@ app.get('/wallet/status', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`REST Wallet running on http://localhost:${PORT}`);
 });

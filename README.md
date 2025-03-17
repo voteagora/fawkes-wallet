@@ -1,6 +1,37 @@
 # REST-Controlled Ethereum Wallet
 
-A headless Ethereum wallet that can be controlled entirely through REST API calls. This wallet implements WalletConnect v2 to connect with dApps, while providing a web interface to monitor its status and history.
+A headless WalletConnect-based wallet that can be controlled through REST API calls. 
+
+This wallet implements WalletConnect v2 to connect with dApps, while providing an optional web interface to monitor its status and history. 
+
+## Working Features
+
+### Reliable
+
+- [x] Create random wallet from random mnemonic, use first address
+- [x] Create wallet from user-provided mnemonic, use first address
+- [x] Create impersonated wallet from address, use it as read-only
+- [x] Sign messages - with actual account
+- [x] Send transactions - with actual account
+
+### Alpha
+
+It's unclear if we're using the WalletConnect V2 API correctly, but it seems to function.
+
+- [x] Sign messages - with impersonated accounts
+- [x] Send transactions - with impersonated accounts
+
+## Planned Features
+- [ ] Dockerize it, publish builds
+- [ ] Create wallet from user-provided private keys
+- [ ] Manage more than one wallet at once
+- [ ] Persistent key storage
+- [ ] Authentication
+- [ ] Create random wallets from mnemonic, use specific/addressable addresses
+- [ ] Attempt to decode proposed transactions using ABIs
+- [ ] Friendlier Monitoring
+- [ ] Auto-sign mode
+- [ ] Control over gas
 
 ## Quick Start
 
@@ -9,6 +40,8 @@ A headless Ethereum wallet that can be controlled entirely through REST API call
 2. Create a `.env` file in the project root:
 ```bash
 WALLET_CONNECT_PROJECT_ID=your_project_id_here
+JSON_RPC_URL=http://localhost:9000
+PORT=3000
 ```
 
 3. Install dependencies and start the server:
@@ -31,7 +64,7 @@ curl -X POST http://localhost:3000/wallet/create
    - Connect using the URI:
 ```bash
 curl -X POST http://localhost:3000/wallet/connect -H "Content-Type: application/json" \
-  -d '{"uri": "wc:6820b1a8b0c8587d39614fb092d27dd94f2d5839bc8a693bf5763376984b1ea2@2?expiryTimestamp=1741801199&relay-protocol=irn&symKey=4925457d9a9fb3bb73527abedbc9620fe06f540e0c2f4abfdb3d1ae1638e9ddc"}'
+  -d '{"uri": "wc:..."}'
 ```
 
 7. Use the API to approve/reject the connection:
@@ -45,7 +78,10 @@ curl -X POST http://localhost:3000/wallet/reject-session
 
 8. Use the API to approve/reject transaction and signature requests:
 ```bash
-# Approve a request
+# Approve the a request (FIFO)
+curl -X POST http://localhost:3000/wallet/approve-request
+
+# Approve a specific request
 curl -X POST http://localhost:3000/wallet/approve-request -H "Content-Type: application/json" \
   -d '{"requestId": "request_id"}'
 
@@ -59,23 +95,6 @@ curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: appli
 curl http://localhost:3000/wallet/status
 ```
 
-## Setup
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Get a WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
-
-3. Update the `projectId` in `src/server.js` with your WalletConnect Project ID
-
-4. Start the server:
-```bash
-npm start
-```
-
-The server will run on http://localhost:3000 by default.
 
 ## API Endpoints
 
@@ -83,12 +102,17 @@ The server will run on http://localhost:3000 by default.
 Creates a new wallet or imports one from a mnemonic phrase.
 
 ```bash
-# Generate new wallet
+# Generate new wallet, from a random mnemonic
 curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json"
 
-# Import existing wallet
+# Import existing wallet from a mnemonic
 curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json" \
   -d '{"mnemonic": "your mnemonic phrase"}'
+
+# Impersonate a wallet from a known address:
+curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json" \
+  -d '{"address": "0x1234567890123456789012345678901234567890"}'
+
 ```
 
 ### Connect to dApp
@@ -115,12 +139,10 @@ Approve or reject transaction and signature requests.
 
 ```bash
 # Approve request
-curl -X POST http://localhost:3000/wallet/approve-request -H "Content-Type: application/json" \
-  -d '{"requestId": "request_id"}'
+curl -X POST http://localhost:3000/wallet/approve-request -H "Content-Type: application/json" -d '{"requestId": "request_id"}'
 
 # Reject request
-curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: application/json" \
-  -d '{"requestId": "request_id"}'
+curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: application/json" -d '{"requestId": "request_id"}'
 ```
 
 ### Check Wallet Status
