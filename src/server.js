@@ -163,8 +163,8 @@ app.post('/wallet/create', async (req, res) => {
         walletHistory.push({
             type: 'wallet_created',
             emoji: '⭐️',
+            timestamp: new Date(),
             context: { 
-                timestamp: new Date(),
                 mnemonic,
                 address: walletAddress
             }
