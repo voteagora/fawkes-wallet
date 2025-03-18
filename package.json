@@ -14,7 +14,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "REST API-controlled Ethereum wallet using WalletConnect",
+  "description": "CLI & HTTP Controlled WalletConnect Wallet",
   "dependencies": {
     "@reown/walletkit": "^1.2.2",
     "@walletconnect/core": "^2.11.2",

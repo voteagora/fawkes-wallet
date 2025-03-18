@@ -1,6 +1,6 @@
-# REST-Controlled Ethereum Wallet
+# CLI & HTTP Controlled Wallet Connect Wallet
 
-A headless WalletConnect-based wallet that can be controlled through REST API calls. 
+A headless WalletConnect-based wallet that can be controlled through HTTP API calls using any HTTP client (curl, python, etc) or the provided CLI. 
 
 This wallet implements WalletConnect v2 to connect with dApps, while providing an optional web interface to monitor its status and history. 
 

@@ -49,8 +49,8 @@ async function initializeWalletConnect() {
         walletKit = await WalletKit.init({
             core,
             metadata: {
-                name: 'REST Wallet',
-                description: 'A REST API-controlled Ethereum wallet',
+                name: 'CLI & HTTP Wallet',
+                description: 'A CLI & HTTP API-controlled Ethereum wallet',
                 url: 'http://localhost:' + (process.env.PORT || 3000),
                 icons: ['https://walletconnect.org/walletconnect-logo.png']
             }
@@ -432,5 +432,5 @@ app.get('/wallet/status', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`REST Wallet running on http://localhost:${PORT}`);
+    console.log(`HTTP Wallet running on http://localhost:${PORT}`);
 });
