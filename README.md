@@ -175,3 +175,25 @@ The interface automatically updates every 2 seconds.
 - All state is stored in RAM and will be lost when the server restarts
 - No authentication is implemented on the REST endpoints
 - Private keys are held in memory
+
+## CLI
+
+There is a cli available, to control the wallet from the command line.  This is useful for troubleshooting the wallet itself.
+
+You can run it with
+
+```
+npm run cli
+```
+
+The cli will show you a list of commands you can use:
+```
+  create [options]           Create a new wallet
+  connect [options]          Connect to a dApp using WalletConnect
+  approve-session            Approve an incoming session request
+  reject-session             Reject an incoming session request
+  approve-request [options]  Approve a transaction request
+  reject-request [options]   Reject a transaction request
+  status                     Get wallet status
+  help [command]             display help for command
+```

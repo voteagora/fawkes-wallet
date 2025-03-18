@@ -117,13 +117,13 @@ app.post('/wallet/create', async (req, res) => {
 
     impersonatedAddress = req.body.address;
 
-    console.log(`impersonatedAddress: ${impersonatedAddress}`);
 
     let resp = {};
 
     if (impersonatedAddress) {
-        
-        console.log("A");
+
+        console.log(`impersonatedAddress: ${impersonatedAddress}`);
+
         provider = new ethers.JsonRpcProvider(process.env.JSON_RPC_URL);
 
         await provider.send("anvil_impersonateAccount", [impersonatedAddress]);
@@ -152,6 +152,9 @@ app.post('/wallet/create', async (req, res) => {
 
         console.log(`RESP: ${resp}`);
     } else {
+
+        provider = new ethers.JsonRpcProvider(process.env.JSON_RPC_URL);
+
         const mnemonic = req.body.mnemonic || bip39.generateMnemonic();
         wallet = ethers.Wallet.fromPhrase(mnemonic);    
 
@@ -345,16 +348,23 @@ app.post('/wallet/approve-request', async (req, res) => {
 
         } else if (methodRequest.method == 'eth_sendTransaction') {
             const tx = methodRequest.params[0];
-            console.log(`DEBUG: ${tx}`)
+            console.log(`DEBUG tx: ${JSON.stringify(tx)}`)
             if (wallet) {
-                result = await wallet.sendTransaction(tx);
+
+                // result = await wallet.sendTransaction(tx);
+                
+                const connectedWallet = wallet.connect(provider);
+                const resultTxn = await connectedWallet.sendTransaction(tx)
+                result = resultTxn.hash;
+
+                // result = await provider.send("eth_sendTransaction", [tx]);
             } else {
                 result = await provider.send("eth_sendTransaction", [tx]);
                 // result = await impersonatedSigner.sendTransaction(tx);
             }
         }
 
-        console.log(`DEBUG: ${result}`)
+        console.log(`DEBUG result: ${JSON.stringify(result)}`)
 
         await walletKit.respondSessionRequest({
             topic,
