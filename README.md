@@ -15,12 +15,6 @@ This wallet implements WalletConnect v2 to connect with dApps, while providing a
 - [x] Create impersonated wallet from address, use it as read-only
 - [x] Sign messages - with actual account
 - [x] Send transactions - with actual account
-
-### Alpha
-
-It's unclear if we're using the WalletConnect V2 API correctly, but it seems to function.
-
-- [x] Sign messages - with impersonated accounts
 - [x] Send transactions - with impersonated accounts
 
 ## Planned Features

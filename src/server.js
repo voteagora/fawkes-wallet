@@ -77,6 +77,7 @@ async function initializeWalletConnect() {
             console.log('Event details:', JSON.stringify(event, null, 2));
             walletHistory.push({
                 type: 'session_request',
+                emoji: '👋',
                 timestamp: new Date(),
                 context: { event } 
             });
@@ -241,20 +242,33 @@ app.post('/wallet/approve-session', async (req, res) => {
         // Build supported namespaces based on required namespaces
         const supportedNamespaces = {};
         Object.entries(optionalNamespaces).forEach(([chain, namespace]) => {
+
+            const rpcMap = Object.fromEntries(
+                namespace.chains.map(chain => [chain.split(":").slice(-1)[0], process.env.JSON_RPC_URL])
+            );
+
+            const methods = [...namespace.methods, 'anvil_sign'];
+            console.log(methods)
+
             supportedNamespaces[chain] = {
                 chains: namespace.chains,
-                methods: namespace.methods,
+                methods,
                 events: namespace.events,
-                accounts: namespace.chains.map(chain => `${chain}:${walletAddress}`)
+                accounts: namespace.chains.map(chain => `${chain}:${walletAddress}`),
+                rpcMap
             };
         });
 
-        console.log('DEBUG: Supported namespaces:', JSON.stringify(supportedNamespaces, null, 2));
+        console.log('DEBUG: proposals params:', JSON.stringify(params, null, 2));
+        console.log('DEBUG: supportedNamespaces:', JSON.stringify(supportedNamespaces, null, 2));
 
-        const approvedNamespaces = buildApprovedNamespaces({
+        let approvedNamespaces = buildApprovedNamespaces({
             proposal: params,
             supportedNamespaces
         });
+
+        approvedNamespaces['eip155']['rpcMap'] = supportedNamespaces['eip155']['rpcMap'];
+        approvedNamespaces['eip155']['methods'] = supportedNamespaces['eip155']['methods'];
 
         console.log('DEBUG: Approved namespaces:', JSON.stringify(approvedNamespaces, null, 2));
 
@@ -337,9 +351,14 @@ app.post('/wallet/approve-request', async (req, res) => {
             const message = methodRequest.params[0];
 
             if (wallet) {
+                console.log(`DEBUG: wallet: ${wallet.address}`)
                 result = await wallet.signMessage(ethers.getBytes(message));
             } else {
-                result = await impersonatedSigner.signMessage(ethers.getBytes(message));
+
+                throw new Error("Cannot sign messages with impersonated accounts, even with fork.")
+                // throw new Error("Cannot sign messages with impersonated account.");
+                // console.log(`DEBUG: impersonated: ${impersonatedAddress}`)
+                // result = await provider.send("anvil_sign", [impersonatedAddress, ethers.hexlify(ethers.toUtf8Bytes(message))]);
             }
 
         } else if (methodRequest.method === 'eth_signTransaction') {
