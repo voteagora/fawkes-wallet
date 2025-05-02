@@ -16,9 +16,10 @@ This wallet implements WalletConnect v2 to connect with dApps, while providing a
 - [x] Sign messages - with actual account
 - [x] Send transactions - with actual account
 - [x] Send transactions - with impersonated accounts
+- [x] Dockerize it.
 
 ## Planned Features
-- [ ] Dockerize it, publish builds
+- [ ] Publish builds
 - [ ] Create wallet from user-provided private keys
 - [ ] Manage more than one wallet at once
 - [ ] Persistent key storage
@@ -89,6 +90,16 @@ curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: appli
 9. Check wallet status:
 ```bash
 curl http://localhost:3000/wallet/status
+```
+## ...or with Docker
+
+```
+docker build -t fawkes-wallet .
+docker run -d -p 4000:4000 \
+       -e WALLET_CONNECT_PROJECT_ID=your_project_id_here \
+       -e JSON_RPC_URL=http://localhost:9000 \
+       -e PORT=4000 \
+       fawkes-wallet
 ```
 
 

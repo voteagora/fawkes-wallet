@@ -1,3 +1,9 @@
+// Ensure global crypto is available
+if (typeof globalThis.crypto === 'undefined') {
+    const { webcrypto } = await import('node:crypto');
+    globalThis.crypto = webcrypto;
+}
+
 import express from 'express';
 import { ethers } from 'ethers';
 import * as bip39 from 'bip39';
@@ -7,11 +13,6 @@ import { getSdkError, buildApprovedNamespaces } from '@walletconnect/utils';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import 'dotenv/config';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const app = express();
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Verify environment variables
 if (!process.env.WALLET_CONNECT_PROJECT_ID) {
@@ -24,6 +25,11 @@ if (!process.env.JSON_RPC_URL) {
     console.error('Error: JSON_RPC_URL is required in .env file');
     process.exit(1);
 }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app = express();
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // In-memory state
 let wallet = null;
@@ -51,12 +57,12 @@ async function initializeWalletConnect() {
             metadata: {
                 name: 'CLI & HTTP Wallet',
                 description: 'A CLI & HTTP API-controlled Ethereum wallet',
-                url: 'http://localhost:' + (process.env.PORT || 3000),
+                url: 'http://localhost:' + (process.env.PORT || 4000),
                 icons: ['https://walletconnect.org/walletconnect-logo.png']
             }
         });
 
-        console.log('WalletKit instance created:', walletKit);
+
 
         walletKit.on('session_proposal', async (event) => {
             console.log('DEBUG: session_proposal event triggered');
@@ -449,7 +455,8 @@ app.get('/wallet/status', (req, res) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`HTTP Wallet running on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 4000;
+console.log(`Starting HTTP Wallet server on PORT=${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`HTTP Wallet running on http://0.0.0.0:${PORT}`);
 });
