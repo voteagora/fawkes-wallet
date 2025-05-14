@@ -57,7 +57,7 @@ async function initializeWalletConnect() {
             metadata: {
                 name: 'CLI & HTTP Wallet',
                 description: 'A CLI & HTTP API-controlled Ethereum wallet',
-                url: 'http://localhost:' + (process.env.PORT || 4000),
+                url: process.env.BASE_URL || 'http://localhost:' + (process.env.PORT || 4000),
                 icons: ['https://walletconnect.org/walletconnect-logo.png']
             }
         });
