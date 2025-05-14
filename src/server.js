@@ -338,15 +338,17 @@ app.post('/wallet/approve-request', async (req, res) => {
 
     try {
         let { requestId } = req.body;
+        let request;
         
         if (!requestId) {
-            requestId = pendingRequests.get('session_request');
-            if (!requestId) {
+            request = pendingRequests.get('session_request');
+            if (!request) {
                 return res.status(404).json({ error: 'No pending requests' });
             }
+            requestId = request.id;
         }
 
-        const request = pendingRequests.get(requestId);
+        request = pendingRequests.get(requestId);
         if (!request) {
             return res.status(404).json({ error: 'Request not found' });
         }
