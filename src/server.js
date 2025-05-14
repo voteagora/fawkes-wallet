@@ -333,6 +333,9 @@ app.post('/wallet/reject-session', async (req, res) => {
 });
 
 app.post('/wallet/approve-request', async (req, res) => {
+
+    console.log('DEBUG: approve-request event triggered');
+
     try {
         let { requestId } = req.body;
         
