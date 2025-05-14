@@ -81,6 +81,7 @@ async function initializeWalletConnect() {
                 timestamp: new Date(),
                 context: { event } 
             });
+            pendingRequests.set('session_request', event);
             pendingRequests.set(event.id, event);
         });
 
@@ -328,12 +329,12 @@ app.post('/wallet/reject-session', async (req, res) => {
 app.post('/wallet/approve-request', async (req, res) => {
     try {
         let { requestId } = req.body;
+        
         if (!requestId) {
-            const lastRequest = Array.from(pendingRequests).pop();
-            if (!lastRequest) {
+            requestId = pendingRequests.get('session_request');
+            if (!requestId) {
                 return res.status(404).json({ error: 'No pending requests' });
             }
-            requestId = lastRequest[1].id; 
         }
 
         const request = pendingRequests.get(requestId);
