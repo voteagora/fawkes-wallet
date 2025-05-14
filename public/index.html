@@ -65,8 +65,14 @@
     </div>
 
     <script>
+        // Get base URL from current page location
+        const getBaseUrl = () => {
+            const basePath = window.location.pathname.replace(/\/+$/, '');
+            return basePath === '/' ? '' : basePath;
+        };
+
         function updateStatus() {
-            fetch('/wallet/status')
+            fetch(getBaseUrl() + '/wallet/status')
                 .then(response => response.json())
                 .then(data => {
                     // Update wallet status
