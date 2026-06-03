@@ -27,9 +27,7 @@ A **headless, browserless, human-less** WalletConnect v2 wallet that you drive e
 HTTP API or a CLI. No extension to click. No popup to babysit. Point it at a dApp, script the
 approvals, and let your test rig do the signing.
 
-MetaMask's logo is a fox. Ours is a fox **in a mask** — because Fawkes' party trick is
-**impersonation**: spin up a read-only wallet from *any* on-chain address and have your suite act as
-it. Sign anything, send anything, automate everything.
+We all know the famous fox. This Fawkes, is far more tricky. **Impersonate**: assume the identity of *any* on-chain address and have your test suite act as it, read-only, no keys required. Sign anything, send anything, automate everything.
 
 > Built for CI/CD test rigs by the team at **[Agora](https://voteagora.com)** — home of onchain
 > governance. We needed a wallet that never sleeps and never clicks "Confirm." So we made one.
