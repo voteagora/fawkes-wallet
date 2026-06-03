@@ -1,99 +1,128 @@
-# Fawkes Wallet
+<p align="center">
+  <img src="public/fawkes-logo.svg" width="160" alt="Fawkes Wallet"/>
+</p>
 
-**A CLI & HTTP Controlled WalletConnect Wallet**
+<h1 align="center">Fawkes Wallet</h1>
 
-A headless WalletConnect-based wallet that can be controlled through HTTP API calls using any HTTP client (curl, python, etc) or the provided CLI. 
+<p align="center">
+  <em>The wallet that wears a mask so your CI doesn't have to.</em>
+</p>
 
-This wallet implements WalletConnect v2 to connect with dApps, while providing an optional web interface to monitor its status and history. 
+<p align="center">
+  <img alt="Node" src="https://img.shields.io/badge/Node-%3E%3D18-339933?logo=node.js&logoColor=white">
+  <img alt="WalletConnect" src="https://img.shields.io/badge/WalletConnect-v2-3B99FC?logo=walletconnect&logoColor=white">
+  <img alt="ethers" src="https://img.shields.io/badge/ethers.js-v6-2535A0">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue">
+  <img alt="Built by Agora" src="https://img.shields.io/badge/built%20by-Agora-E8823A">
+</p>
+
+```text
+╔═╗╔═╗╦ ╦╦╔═╔═╗╔═╗
+╠╣ ╠═╣║║║╠╩╗╠╣ ╚═╗
+╚  ╩ ╩╚╩╝╩ ╩╚═╝╚═╝
+  remember, remember… to test your dApp
+```
+
+A **headless, browserless, human-less** WalletConnect v2 wallet that you drive entirely over an
+HTTP API or a CLI. No extension to click. No popup to babysit. Point it at a dApp, script the
+approvals, and let your test rig do the signing.
+
+We all know the famous fox. This Fawkes, is far more tricky. **Impersonate**: assume the identity of *any* on-chain address and have your test suite act as it, read-only, no keys required. Sign anything, send anything, automate everything.
+
+> Built for CI/CD test rigs by the team at **[Agora](https://voteagora.com)** — home of onchain
+> governance. We needed a wallet that never sleeps and never clicks "Confirm." So we made one.
+
+---
+
+## Why test rigs love it
+
+- 🎭 **Impersonate any address** — read-only wallets from a bare address, perfect for fork &
+  mainnet-state testing without a single private key.
+- 🤖 **No browser, no extension, no human** — pure HTTP + CLI, drops straight into your pipeline.
+- ⚡ **Scriptable approvals** — approve/reject sessions and requests FIFO or by specific `requestId`.
+- 🧪 **Deterministic & disposable** — all state lives in RAM, so every run starts clean and vanishes
+  when the container stops. A feature, not a bug.
+- 🐳 **Dockerized** — one image, drop it in your `docker-compose`, done.
+- ✍️ **Signs everything** — messages and transactions, with real *or* impersonated accounts.
 
 ## Working Features
 
-### Reliable
-
-- [x] Create random wallet from random mnemonic, use first address
-- [x] Create wallet from user-provided mnemonic, use first address
-- [x] Create impersonated wallet from address, use it as read-only
-- [x] Sign messages - with actual account
-- [x] Send transactions - with actual account
-- [x] Send transactions - with impersonated accounts
-- [x] Dockerize it.
-
-## Planned Features
-- [ ] Publish builds
-- [ ] Create wallet from user-provided private keys
-- [ ] Manage more than one wallet at once
-- [ ] Persistent key storage
-- [ ] Authentication
-- [ ] Create random wallets from mnemonic, use specific/addressable addresses
-- [ ] Attempt to decode proposed transactions using ABIs
-- [ ] Friendlier Monitoring
-- [ ] Auto-sign mode
-- [ ] Control over gas
+- [x] Create a random wallet from a random mnemonic (uses the first address)
+- [x] Create a wallet from a user-provided mnemonic (uses the first address)
+- [x] Create an **impersonated** wallet from an address (read-only)
+- [x] Sign messages — with the real account
+- [x] Send transactions — with the real account
+- [x] Send transactions — with impersonated accounts
+- [x] Dockerize it
 
 ## Quick Start
 
-1. Get a WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
+1. Grab a WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/).
 
 2. Create a `.env` file in the project root:
+
 ```bash
 WALLET_CONNECT_PROJECT_ID=your_project_id_here
 JSON_RPC_URL=http://localhost:9000
 PORT=3000
 ```
 
-3. Install dependencies and start the server:
+3. Install and start the server:
+
 ```bash
 npm install
 npm start
 ```
 
-4. Create a new wallet:
+4. Mint a fresh identity:
+
 ```bash
 curl -X POST http://localhost:3000/wallet/create
 ```
 
-5. Open http://localhost:3000 in your browser to see the wallet status
+5. Open <http://localhost:3000> to watch the wallet's status in real time.
 
-6. To test with a dApp:
-   - Go to any WalletConnect-enabled dApp
-   - Select WalletConnect as your connection method
-   - Copy the connection URI (starts with "wc:")
-   - Connect using the URI:
+6. Point it at a dApp — grab the WalletConnect URI (it starts with `wc:`) and hand it over:
+
 ```bash
 curl -X POST http://localhost:3000/wallet/connect -H "Content-Type: application/json" \
   -d '{"uri": "wc:..."}'
 ```
 
-7. Use the API to approve/reject the connection:
+7. Decide its fate — approve or reject the session:
+
 ```bash
 # Approve the connection
 curl -X POST http://localhost:3000/wallet/approve-session
 
-# Or reject it
+# …or reject it
 curl -X POST http://localhost:3000/wallet/reject-session
 ```
 
-8. Use the API to approve/reject transaction and signature requests:
+8. Approve or reject incoming transaction & signature requests:
+
 ```bash
-# Approve the a request (FIFO)
+# Approve the next request (FIFO)
 curl -X POST http://localhost:3000/wallet/approve-request
 
 # Approve a specific request
 curl -X POST http://localhost:3000/wallet/approve-request -H "Content-Type: application/json" \
   -d '{"requestId": "request_id"}'
 
-# Or reject it
+# …or reject one
 curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: application/json" \
   -d '{"requestId": "request_id"}'
 ```
 
-9. Check wallet status:
+9. Check in on it any time:
+
 ```bash
 curl http://localhost:3000/wallet/status
 ```
-## ...or with Docker
 
-```
+## …or with Docker
+
+```bash
 docker build -t fawkes-wallet .
 docker run -d -p 4000:4000 \
        -e WALLET_CONNECT_PROJECT_ID=your_project_id_here \
@@ -102,28 +131,38 @@ docker run -d -p 4000:4000 \
        fawkes-wallet
 ```
 
-
 ## API Endpoints
 
+Every move the wallet makes is a single HTTP call away.
+
+| Method | Endpoint                  | What it does                                          |
+| ------ | ------------------------- | ----------------------------------------------------- |
+| `POST` | `/wallet/create`          | Create a new wallet, import a mnemonic, or impersonate |
+| `POST` | `/wallet/connect`         | Connect to a dApp via a WalletConnect URI             |
+| `POST` | `/wallet/approve-session` | Approve a pending session proposal                    |
+| `POST` | `/wallet/reject-session`  | Reject a pending session proposal                     |
+| `POST` | `/wallet/approve-request` | Approve a transaction/signature request               |
+| `POST` | `/wallet/reject-request`  | Reject a transaction/signature request                |
+| `GET`  | `/wallet/status`          | Current status, pending requests, and history         |
+
 ### Create Wallet
-Creates a new wallet or imports one from a mnemonic phrase.
+
+Create a new wallet, import one from a mnemonic, or slip on a mask and impersonate an address.
 
 ```bash
-# Generate new wallet, from a random mnemonic
+# Generate a new wallet from a random mnemonic
 curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json"
 
-# Import existing wallet from a mnemonic
+# Import an existing wallet from a mnemonic
 curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json" \
   -d '{"mnemonic": "your mnemonic phrase"}'
 
-# Impersonate a wallet from a known address:
+# Impersonate a wallet from a known address (read-only)
 curl -X POST http://localhost:3000/wallet/create -H "Content-Type: application/json" \
   -d '{"address": "0x1234567890123456789012345678901234567890"}'
-
 ```
 
-### Connect to dApp
-Connect to a dApp using WalletConnect URI.
+### Connect to a dApp
 
 ```bash
 curl -X POST http://localhost:3000/wallet/connect -H "Content-Type: application/json" \
@@ -131,7 +170,6 @@ curl -X POST http://localhost:3000/wallet/connect -H "Content-Type: application/
 ```
 
 ### Manage Sessions
-Approve or reject WalletConnect session proposals.
 
 ```bash
 # Approve session
@@ -142,7 +180,6 @@ curl -X POST http://localhost:3000/wallet/reject-session
 ```
 
 ### Handle Transaction Requests
-Approve or reject transaction and signature requests.
 
 ```bash
 # Approve request
@@ -153,7 +190,6 @@ curl -X POST http://localhost:3000/wallet/reject-request -H "Content-Type: appli
 ```
 
 ### Check Wallet Status
-Get the current wallet status, including pending requests and history.
 
 ```bash
 curl http://localhost:3000/wallet/status
@@ -161,40 +197,26 @@ curl http://localhost:3000/wallet/status
 
 ## Web Interface
 
-A web interface is available at http://localhost:3000 that shows:
+A live dashboard is available at <http://localhost:3000>, showing:
+
 - Current wallet status and address
-- Pending requests that need approval/rejection
-- History of all wallet actions
+- Pending requests awaiting your verdict
+- A full history of everything the wallet has done
 
-The interface automatically updates every 2 seconds.
-
-## Implementation Details
-
-- Built with Node.js and Express
-- Uses WalletConnect v2 for dApp connections
-- Uses ethers.js v6 for Ethereum interactions
-- All state is stored in RAM (no persistence)
-- Supports signing messages and transactions
-
-## Security Considerations
-
-- This is a demonstration wallet and should not be used with significant amounts of cryptocurrency
-- All state is stored in RAM and will be lost when the server restarts
-- No authentication is implemented on the REST endpoints
-- Private keys are held in memory
+It refreshes itself every 2 seconds, so you can lean back and watch.
 
 ## CLI
 
-There is a cli available, to control the wallet from the command line using the same .env configured with the server.  
+Prefer the terminal? There's a CLI that drives the same wallet using the same `.env` as the server —
+handy for troubleshooting the wallet itself or for certain flows in your app.
 
-This is useful for troubleshooting the wallet itself or for certain flows in your app.
-
-```
+```bash
 npm run cli
 ```
 
-The cli will show you a list of commands you can use:
-```
+It'll list everything it can do:
+
+```text
   create [options]           Create a new wallet
   connect [options]          Connect to a dApp using WalletConnect
   approve-session            Approve an incoming session request
@@ -205,9 +227,9 @@ The cli will show you a list of commands you can use:
   help [command]             display help for command
 ```
 
-Example commands in order of a typical flow:
+A typical flow, start to finish:
 
-```
+```bash
 % node src/cli.js create
 Wallet created successfully:
 {
@@ -216,7 +238,7 @@ Wallet created successfully:
 }
 ```
 
-```
+```bash
 % node src/cli.js connect -u "wc:2f4d8871dd30e800260a34a4ea8dba61b6f49065d748adeb7e80b28488f45578@2?expiryTimestamp=1742261439&relay-protocol=irn&symKey=2f72848d5d5330a9b62424f6c63b42f0ff7112cdeadfc8da0c185b1bbb5602ef"
 Connection initiated:
 {
@@ -224,20 +246,22 @@ Connection initiated:
 }
 ```
 
-```
+```bash
 % node src/cli.js approve-session
-Session approved:
+Session approved ✅
+```
+
+<details>
+<summary>Full <code>approve-session</code> response (click to expand)</summary>
+
+```json
 {
   "success": true,
   "session": {
-    "relay": {
-      "protocol": "irn"
-    },
+    "relay": { "protocol": "irn" },
     "namespaces": {
       "eip155": {
-        "chains": [
-          "eip155:1"
-        ],
+        "chains": ["eip155:1"],
         "methods": [
           "eth_accounts",
           "eth_requestAccounts",
@@ -261,73 +285,19 @@ Session approved:
           "wallet_getCallsStatus",
           "wallet_showCallsStatus"
         ],
-        "events": [
-          "chainChanged",
-          "accountsChanged",
-          "message",
-          "disconnect",
-          "connect"
-        ],
-        "accounts": [
-          "eip155:1:0x4033Bd6759cAD2E1691F6E18E1D8c1B15e3beC69"
-        ]
+        "events": ["chainChanged", "accountsChanged", "message", "disconnect", "connect"],
+        "accounts": ["eip155:1:0x4033Bd6759cAD2E1691F6E18E1D8c1B15e3beC69"]
       }
     },
     "controller": "e119404e26da4bc0df3d302b30cf63c31e4d13a0cc09fbb0ff2056df459d1225",
     "expiry": 1742865954,
     "topic": "13d79ad82cb7205abbd4edefc834792bde4a4af98d7202e06792765971e06f50",
-    "requiredNamespaces": {},
-    "optionalNamespaces": {
-      "eip155": {
-        "chains": [
-          "eip155:1"
-        ],
-        "methods": [
-          "eth_accounts",
-          "eth_requestAccounts",
-          "eth_sendRawTransaction",
-          "eth_sign",
-          "eth_signTransaction",
-          "eth_signTypedData",
-          "eth_signTypedData_v3",
-          "eth_signTypedData_v4",
-          "eth_sendTransaction",
-          "personal_sign",
-          "wallet_switchEthereumChain",
-          "wallet_addEthereumChain",
-          "wallet_getPermissions",
-          "wallet_requestPermissions",
-          "wallet_registerOnboarding",
-          "wallet_watchAsset",
-          "wallet_scanQRCode",
-          "wallet_sendCalls",
-          "wallet_getCapabilities",
-          "wallet_getCallsStatus",
-          "wallet_showCallsStatus"
-        ],
-        "events": [
-          "chainChanged",
-          "accountsChanged",
-          "message",
-          "disconnect",
-          "connect"
-        ],
-        "rpcMap": {
-          "1": "https://eth-mainnet.g.alchemy.com/v2/5a1..."
-        }
-      }
-    },
-    "pairingTopic": "2f4d8871dd30e800260a34a4ea8dba61b6f49065d748adeb7e80b28488f45578",
-    "acknowledged": false,
     "self": {
       "publicKey": "e119404e26da4bc0df3d302b30cf63c31e4d13a0cc09fbb0ff2056df459d1225",
       "metadata": {
         "name": "CLI & HTTP Wallet",
         "description": "A CLI & HTTP API-controlled Ethereum wallet",
-        "url": "http://localhost:3001",
-        "icons": [
-          "https://walletconnect.org/walletconnect-logo.png"
-        ]
+        "url": "http://localhost:3001"
       }
     },
     "peer": {
@@ -335,14 +305,6 @@ Session approved:
       "metadata": {
         "description": "Home of token governance",
         "url": "https://vote.uniswapfoundation.org",
-        "icons": [
-          "https://vote.uniswapfoundation.org/icon.png?c9ea8379a2e802f2",
-          "https://vote.uniswapfoundation.org/favicon/apple-touch-icon.png",
-          "https://vote.uniswapfoundation.org/favicon/favicon-32x32.png",
-          "https://vote.uniswapfoundation.org/favicon/favicon-16x16.png",
-          "https://vote.uniswapfoundation.org/favicon/safari-pinned-tab.svg",
-          "https://vote.uniswapfoundation.org/favicon/favicon.ico"
-        ],
         "name": "Uniswap Agora"
       }
     },
@@ -351,7 +313,9 @@ Session approved:
 }
 ```
 
-```
+</details>
+
+```bash
 % node src/cli.js approve-request
 Request approved:
 {
@@ -359,3 +323,47 @@ Request approved:
   "result": "0x52205048924e9ff69df794cab5b854d6dfaac732ed0f1b753f5e307355bcc8ee2ca0af73364a5b82b423ee88d5b985c9642c575d75115aade2bf9eab9bdaea591c"
 }
 ```
+
+> Approving/rejecting a specific request? Pass `-i <requestId>` (it uses the latest request if you
+> don't).
+
+## Implementation Details
+
+- Built with **Node.js** and **Express**
+- **WalletConnect v2** for dApp connections
+- **ethers.js v6** for all Ethereum interactions
+- All state lives in **RAM** — nothing is persisted
+- Signs both messages and transactions
+
+## Security Considerations
+
+Fawkes keeps its secrets in RAM and forgets them by morning. Treat it accordingly:
+
+- This is a **demonstration / test wallet** — don't point it at significant funds.
+- All state is in memory and is **lost on restart** (great for ephemeral CI, terrible for savings).
+- There is **no authentication** on the REST endpoints.
+- Private keys are held in memory.
+
+In short: perfect for a test rig, wrong for your retirement.
+
+## Roadmap
+
+The mask has plans.
+
+- [ ] Publish builds
+- [ ] Create a wallet from user-provided private keys
+- [ ] Manage more than one wallet at once
+- [ ] Persistent key storage
+- [ ] Authentication
+- [ ] Create random wallets from a mnemonic and use specific/addressable addresses
+- [ ] Decode proposed transactions using ABIs
+- [ ] Friendlier monitoring
+- [ ] Auto-sign mode
+- [ ] Control over gas
+
+---
+
+<p align="center">
+  Made with mischief by the team at <a href="https://voteagora.com"><strong>Agora</strong></a> · MIT Licensed<br/>
+  <em>Remember, remember.</em>
+</p>
