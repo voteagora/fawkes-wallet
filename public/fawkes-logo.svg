@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Fawkes Wallet logo: a fox face wearing a Guy Fawkes mask">
+  <title>Fawkes Wallet</title>
+
+  <!-- ears (fox) -->
+  <path d="M52 78 L34 24 L86 56 Z" fill="#E8823A" stroke="#1A1A1A" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M148 78 L166 24 L114 56 Z" fill="#E8823A" stroke="#1A1A1A" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M55 70 L45 38 L73 56 Z" fill="#1A1A1A"/>
+  <path d="M145 70 L155 38 L127 56 Z" fill="#1A1A1A"/>
+
+  <!-- face (fox) -->
+  <path d="M50 72 C50 54 72 46 100 46 C128 46 150 54 150 72
+           C150 112 134 154 100 188 C66 154 50 112 50 72 Z"
+        fill="#E8823A" stroke="#1A1A1A" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- white cheeks / snout (fox markings = pale mask face) -->
+  <path d="M72 96 C66 128 80 156 100 182 C120 156 134 128 128 96
+           C118 110 82 110 72 96 Z" fill="#F7F3EC"/>
+
+  <!-- brows (Guy Fawkes mask: sharp arches) -->
+  <path d="M64 86 Q80 74 96 84" fill="none" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+  <path d="M136 86 Q120 74 104 84" fill="none" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- eyes (sly almonds) -->
+  <path d="M70 96 Q82 88 94 96 Q82 104 70 96 Z" fill="#1A1A1A"/>
+  <path d="M130 96 Q118 88 106 96 Q118 104 130 96 Z" fill="#1A1A1A"/>
+
+  <!-- nose -->
+  <path d="M92 124 L108 124 L100 134 Z" fill="#1A1A1A"/>
+
+  <!-- handlebar mustache (the mask) -->
+  <path d="M100 134 C92 144 78 146 70 138 C76 150 92 150 100 140
+           C108 150 124 150 130 138 C122 146 108 144 100 134 Z" fill="#1A1A1A"/>
+
+  <!-- goatee point down the chin -->
+  <path d="M94 150 Q100 178 106 150 Q100 160 94 150 Z" fill="#1A1A1A"/>
+
+  <!-- subtle smile -->
+  <path d="M84 146 Q100 158 116 146" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+</svg>
