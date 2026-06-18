@@ -78,6 +78,12 @@ program
       const data = await apiRequest('/wallet/connect', 'POST', { uri: options.uri });
       console.log(chalk.green('Connection initiated:'));
       formatOutput(data, program.opts().raw);
+
+      
+
+      const data2 = await apiRequest('/wallet/approve-session', 'POST');
+      console.log(chalk.green('Session approved:'));
+      formatOutput(data2, program.opts().raw);
     } catch (error) {
       console.error(chalk.red(`Failed to connect: ${error.message}`));
     }
